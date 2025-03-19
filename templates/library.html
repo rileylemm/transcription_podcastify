@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Library</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-links a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .header-links a:hover {
+            text-decoration: underline;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .video-title:hover {
+            color: #0066cc;
+        }
+
+        .video-metadata {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .video-metadata p {
+            margin: 5px 0;
+        }
+
+        .channel-link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .channel-link:hover {
+            text-decoration: underline;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .error-message {
+            color: #dc3545;
+            padding: 20px;
+            background: #fff;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .no-videos {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        /* Menu button styles */
+        .menu-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: background-color 0.2s;
+        }
+
+        .menu-button:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .menu-dots {
+            color: white;
+            font-size: 20px;
+            line-height: 0;
+        }
+
+        /* Menu dropdown styles */
+        .menu-dropdown {
+            position: absolute;
+            top: 45px;
+            right: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 3;
+            min-width: 150px;
+            padding: 8px 0;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .menu-item.delete {
+            color: #dc3545;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-title {
+            margin: 0 0 16px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .modal-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .modal-button.cancel {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-button.cancel:hover {
+            background: #e5e5e5;
+        }
+
+        .modal-button.delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .modal-button.delete:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Video Library</h1>
+        <div class="header-links">
+            <a href="/">← Back to Analyzer</a>
+            <a href="/reddit/library">Reddit Library</a>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="error-message">
+        <p>Error: {{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if not videos %}
+    <div class="no-videos">
+        <p>No videos found in the library. Try analyzing some videos first!</p>
+    </div>
+    {% else %}
+    <div class="video-grid">
+        {% for video_title, video_data in videos.items() %}
+        <div class="video-card" data-video-title="{{ video_title }}">
+            <button class="menu-button" onclick="toggleMenu(event, '{{ video_title }}')">
+                <span class="menu-dots">⋮</span>
+            </button>
+            <div class="menu-dropdown" id="menu-{{ video_title|urlencode }}">
+                <div class="menu-item delete" onclick="showDeleteConfirmation('{{ video_title }}')">
+                    <span>🗑️</span> Delete
+                </div>
+            </div>
+            {% set metadata_file = find_latest_file(video_data.video_dir, '__metadata__') %}
+            {% if metadata_file %}
+                {% set metadata = load_json_file(metadata_file) %}
+                <img class="video-thumbnail" 
+                     src="{{ metadata.thumbnail_url }}" 
+                     alt="{{ metadata.title }}">
+                <div class="video-info">
+                    <a href="/video/{{ video_title }}" class="video-title">{{ metadata.title }}</a>
+                    <div class="video-metadata">
+                        <p>By <a href="{{ metadata.channel_url }}" class="channel-link" target="_blank">{{ metadata.channel_name }}</a></p>
+                        <p>Published: {{ metadata.publish_date|timestamp }}</p>
+                        <div class="video-stats">
+                            <span>{{ "{:,}".format(metadata.view_count) }} views</span>
+                            <span>{{ video_data.analyses|length }} analyses</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="video-info">
+                    <a href="/video/{{ video_title }}" class="video-title">{{ video_title }}</a>
+                    <div class="video-metadata">
+                        <div class="video-stats">
+                            <span>{{ video_data.analyses|length }} analyses</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Delete confirmation modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Delete Video</h3>
+            <p>Are you sure you want to delete this video and all its analyses? This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-button cancel" onclick="hideDeleteConfirmation()">Cancel</button>
+                <button class="modal-button delete" onclick="deleteVideo()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeMenu = null;
+        let videoToDelete = null;
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.menu-button') && !event.target.closest('.menu-dropdown')) {
+                closeAllMenus();
+            }
+        });
+
+        function toggleMenu(event, videoTitle) {
+            event.stopPropagation();
+            const menuId = `menu-${encodeURIComponent(videoTitle)}`;
+            const menu = document.getElementById(menuId);
+            
+            if (activeMenu && activeMenu !== menu) {
+                activeMenu.classList.remove('show');
+            }
+            
+            menu.classList.toggle('show');
+            activeMenu = menu;
+        }
+
+        function closeAllMenus() {
+            if (activeMenu) {
+                activeMenu.classList.remove('show');
+                activeMenu = null;
+            }
+        }
+
+        function showDeleteConfirmation(videoTitle) {
+            videoToDelete = videoTitle;
+            const modal = document.getElementById('delete-modal');
+            modal.classList.add('show');
+            closeAllMenus();
+        }
+
+        function hideDeleteConfirmation() {
+            const modal = document.getElementById('delete-modal');
+            modal.classList.remove('show');
+            videoToDelete = null;
+        }
+
+        async function deleteVideo() {
+            if (!videoToDelete) return;
+
+            try {
+                const response = await fetch('/delete_video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ video_title: videoToDelete })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete video');
+                }
+
+                // Remove the video card from the UI
+                const videoCard = document.querySelector(`.video-card[data-video-title="${videoToDelete}"]`);
+                if (videoCard) {
+                    videoCard.remove();
+                }
+
+                // Check if there are no more videos
+                const remainingVideos = document.querySelectorAll('.video-card');
+                if (remainingVideos.length === 0) {
+                    location.reload(); // Reload to show the "No videos" message
+                }
+
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Failed to delete video. Please try again.');
+            } finally {
+                hideDeleteConfirmation();
+            }
+        }
+    </script>
+</body>
+</html> 

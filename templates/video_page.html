@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ video_title }} - YouTube Transcript Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .video-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+
+        .video-meta a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .video-meta a:hover {
+            text-decoration: underline;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .youtube-link {
+            display: inline-flex;
+            align-items: center;
+            background-color: #ff0000;
+            color: white !important;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .youtube-link:hover {
+            background-color: #cc0000;
+            text-decoration: none !important;
+        }
+
+        .youtube-icon {
+            margin-right: 6px;
+            font-size: 1.2em;
+        }
+
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #2c3e50;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+
+        .tab-navigation {
+            background: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .transcript-segment {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .transcript-segment .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+
+        .analysis-section {
+            margin-bottom: 20px;
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .model-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .model-badge.mistral {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .model-badge.gpt {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            max-width: 80%;
+            position: relative;
+        }
+
+        .chat-message.user {
+            margin-left: auto;
+            background-color: #007bff;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 1rem 1rem 0 1rem;
+        }
+
+        .chat-message.assistant {
+            margin-right: auto;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            border-radius: 1rem 1rem 1rem 0;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .chat-input textarea {
+            flex-grow: 1;
+            resize: none;
+            height: 38px;
+            min-height: 38px;
+        }
+
+        .message-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .message-menu.show {
+            display: block;
+        }
+
+        .message-menu-button {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 16px;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .message-menu-button:hover {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .message-menu-item {
+            display: block;
+            width: 100%;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            white-space: nowrap;
+            color: #212529;
+        }
+
+        .message-menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .analysis-item {
+            position: relative;
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ video_title|replace('_', ' ')|title }}</h1>
+            {% if metadata %}
+            <div class="video-meta">
+                <a href="{{ metadata.channel_url }}" target="_blank">{{ metadata.channel_name }}</a>
+                • {{ "{:,}".format(metadata.view_count) }} views
+                • {{ metadata.publish_date|timestamp }}
+            </div>
+            {% endif %}
+            <div class="nav-links">
+                <a href="/">← Back to Analyzer</a>
+                <a href="/library">← Back to Library</a>
+                {% if metadata and metadata.video_url %}
+                    <a href="{{ metadata.video_url }}" target="_blank" class="youtube-link">
+                        <span class="youtube-icon">▶</span> Watch on YouTube
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-dashboard">
+            <div class="stat-card">
+                <h3>Transcript Length</h3>
+                <div class="value">{{ stats.transcript_length }}</div>
+                <div class="label">words</div>
+            </div>
+            <div class="stat-card">
+                <h3>Analyses</h3>
+                <div class="value">{{ stats.analyses_count }}</div>
+                <div class="label">total analyses</div>
+            </div>
+            <div class="stat-card">
+                <h3>Chat Messages</h3>
+                <div class="value">{{ stats.chat_messages }}</div>
+                <div class="label">messages</div>
+            </div>
+            <div class="stat-card">
+                <h3>Video Duration</h3>
+                <div class="value">{{ stats.duration }}</div>
+                <div class="label">minutes</div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="showTab('transcript')">Transcript</button>
+            <button class="tab-button" onclick="showTab('analyses')">Analyses</button>
+            <button class="tab-button" onclick="showTab('chat')">Chat</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Transcript Tab -->
+            <div id="transcript-tab" class="tab-pane">
+                {% if transcript %}
+                    {% for segment in transcript %}
+                    <div class="transcript-segment">
+                        <span class="timestamp">{{ segment.timestamp }}</span>
+                        <span class="text">{{ segment.text }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No transcript available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Analyses Tab -->
+            <div id="analyses-tab" class="tab-pane" style="display: none;">
+                <!-- Analysis Controls -->
+                <div class="analysis-controls mb-4">
+                    <h4>Generate New Analysis</h4>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <select id="analysisType" class="form-select">
+                                <option value="technical_summary">Technical Summary</option>
+                                <option value="full_context">Full Context Analysis</option>
+                                <option value="code_snippets">Code Snippets</option>
+                                <option value="tools_and_resources">Tools & Resources</option>
+                                <option value="key_workflows">Key Workflows</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <select id="modelType" class="form-select">
+                                <option value="mistral">Mistral</option>
+                                <option value="gpt">GPT</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button onclick="analyzeTranscript()" class="btn btn-primary">
+                                Analyze
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <div id="analysisStatus" class="text-muted" style="display: none;">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Analyzing...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Analyses -->
+                {% for analysis_type, models in analyses.items() %}
+                    <div class="analysis-section">
+                        <h3>{{ analysis_type|replace('_', ' ')|title }}</h3>
+                        {% for model, items in models.items() %}
+                            {% for analysis in items %}
+                            <div class="analysis-item">
+                                <div class="analysis-header">
+                                    <span class="model-badge {{ model }}">{{ model|upper }}</span>
+                                    <span class="timestamp">{{ analysis.timestamp|timestamp }}</span>
+                                    <button class="message-menu-button" onclick="toggleAnalysisMenu(event, this)">⋮</button>
+                                    <div class="message-menu">
+                                        <button class="message-menu-item" onclick="deleteAnalysis('{{ video_title }}', '{{ analysis_type }}', '{{ model }}', {{ analysis.timestamp }})">
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="analysis-content">
+                                    {{ analysis.content|safe }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-pane" style="display: none;">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Chat messages will be loaded here -->
+                    </div>
+                    <div class="chat-input">
+                        <textarea 
+                            id="messageInput" 
+                            class="form-control" 
+                            placeholder="Ask questions about the video content..."
+                            onclick="this.selectionStart = 0; this.selectionEnd = 0;"
+                            onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }">
+                        </textarea>
+                        <button id="sendButton" class="btn btn-primary" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add function to update analysis type options based on model
+        function updateAnalysisOptions() {
+            const modelSelect = document.getElementById('modelType');
+            const analysisSelect = document.getElementById('analysisType');
+            const fullContextOption = Array.from(analysisSelect.options).find(option => option.value === 'full_context');
+            
+            if (modelSelect.value === 'mistral') {
+                fullContextOption.disabled = true;
+                fullContextOption.title = 'Full Context analysis is only available with GPT';
+                if (analysisSelect.value === 'full_context') {
+                    analysisSelect.value = 'technical_summary';
+                }
+            } else {
+                fullContextOption.disabled = false;
+                fullContextOption.title = '';
+            }
+        }
+        
+        // Initialize all event listeners when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChatHistory();
+            
+            // Add model selection listener
+            const modelSelect = document.getElementById('modelType');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', updateAnalysisOptions);
+                updateAnalysisOptions(); // Initial state
+            }
+            
+            // Close menus when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.message-menu') && !e.target.closest('.message-menu-button')) {
+                    document.querySelectorAll('.message-menu.show').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Show transcript tab by default
+            showTab('transcript');
+        });
+
+        // Analysis menu functions
+        function toggleAnalysisMenu(event, button) {
+            event.stopPropagation();
+            const menu = button.nextElementSibling;
+            document.querySelectorAll('.message-menu.show').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            menu.classList.toggle('show');
+        }
+
+        async function deleteAnalysis(videoTitle, analysisType, model, timestamp) {
+            if (!confirm('Are you sure you want to delete this analysis?')) return;
+            
+            try {
+                const response = await fetch('/delete_analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_title: videoTitle,
+                        analysis_type: analysisType,
+                        model: model,
+                        timestamp: timestamp
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete analysis');
+                }
+                
+                // Reload the page to show updated analyses
+                window.location.reload();
+                
+            } catch (error) {
+                console.error('Error deleting analysis:', error);
+                alert('Error deleting analysis: ' + error.message);
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Update button states
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Hide all tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.style.display = 'none';
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+
+            // If switching to chat tab, scroll to bottom of messages
+            if (tabName === 'chat') {
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Chat functionality
+        function createMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${message.role}`;
+            messageDiv.dataset.timestamp = message.timestamp;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = message.content;
+            
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'message-timestamp';
+            timestampDiv.textContent = formatTimestamp(message.timestamp);
+            
+            const menuButton = document.createElement('button');
+            menuButton.className = 'message-menu-button';
+            menuButton.innerHTML = '⋮';
+            menuButton.onclick = (e) => {
+                e.stopPropagation();
+                toggleMessageMenu(messageDiv);
+            };
+            
+            const menu = document.createElement('div');
+            menu.className = 'message-menu';
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'message-menu-item';
+            deleteButton.innerHTML = '🗑️ Delete';
+            deleteButton.onclick = () => deleteMessage(message.timestamp);
+            
+            menu.appendChild(deleteButton);
+            messageDiv.appendChild(menuButton);
+            messageDiv.appendChild(menu);
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timestampDiv);
+            
+            return messageDiv;
+        }
+
+        function toggleMessageMenu(messageDiv) {
+            const menu = messageDiv.querySelector('.message-menu');
+            document.querySelectorAll('.message-menu.show').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            menu.classList.toggle('show');
+        }
+
+        async function loadChatHistory() {
+            try {
+                const response = await fetch('/get_chat_history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ video_title: '{{ video_title }}' })
+                });
+                
+                if (!response.ok) throw new Error('Failed to load chat history');
+                
+                const data = await response.json();
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = '';
+                
+                data.messages.forEach(message => {
+                    chatMessages.appendChild(createMessageElement(message));
+                });
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Create and show user message immediately
+            const userMessage = {
+                role: 'user',
+                content: message,
+                timestamp: new Date().toISOString()
+            };
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.appendChild(createMessageElement(userMessage));
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+            
+            try {
+                const response = await fetch('/chat_with_video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_title: '{{ video_title }}',
+                        message: message
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send message');
+                
+                const data = await response.json();
+                
+                // Create and show assistant message
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: data.response,
+                    timestamp: new Date().toISOString()
+                };
+                chatMessages.appendChild(createMessageElement(assistantMessage));
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Error sending message. Please try again.');
+                // Remove the user message if there was an error
+                chatMessages.removeChild(chatMessages.lastChild);
+            } finally {
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        async function deleteMessage(timestamp) {
+            if (!confirm('Are you sure you want to delete this message?')) return;
+            
+            try {
+                const response = await fetch('/delete_chat_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_title: '{{ video_title }}',
+                        timestamp: timestamp
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to delete message');
+                
+                await loadChatHistory();
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                alert('Error deleting message. Please try again.');
+            }
+        }
+
+        function formatTimestamp(isoString) {
+            return new Date(isoString).toLocaleTimeString();
+        }
+
+        async function analyzeTranscript() {
+            const analysisType = document.getElementById('analysisType').value;
+            const model = document.getElementById('modelType').value;
+            const statusDiv = document.getElementById('analysisStatus');
+            
+            try {
+                statusDiv.style.display = 'block';
+                
+                const response = await fetch('/analyze_transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_title: '{{ video_title }}',
+                        analysis_type: analysisType,
+                        model: model
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to analyze transcript');
+                }
+                
+                // Reload the page to show new analysis
+                window.location.reload();
+                
+            } catch (error) {
+                console.error('Error analyzing transcript:', error);
+                alert('Error analyzing transcript: ' + error.message);
+            } finally {
+                statusDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

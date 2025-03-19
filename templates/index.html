@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #video-url {
+            width: 70%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .transcript-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .tools-section {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .tools-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .tool-group {
+            margin-bottom: 20px;
+        }
+
+        .model-select {
+            margin-bottom: 15px;
+        }
+
+        .model-select label {
+            margin-right: 10px;
+        }
+
+        .tool-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tool-buttons button {
+            min-width: 200px;
+            margin: 5px;
+            background-color: #28a745;
+            position: relative;
+        }
+
+        .tool-buttons button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .tool-buttons button .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 8px;
+            display: none;
+        }
+
+        .tool-buttons button.loading .spinner-border {
+            display: inline-block;
+        }
+
+        .tool-buttons button:hover {
+            background-color: #218838;
+        }
+
+        .analysis-result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .analysis-content {
+            line-height: 1.6;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .analysis-content h1 {
+            font-size: 2em;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #eaecef;
+        }
+
+        .analysis-content h2 {
+            font-size: 1.5em;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #eaecef;
+        }
+
+        .analysis-content h3 {
+            font-size: 1.25em;
+            margin-top: 1.3em;
+            margin-bottom: 0.6em;
+        }
+
+        .analysis-content ul,
+        .analysis-content ol {
+            padding-left: 2em;
+            margin: 1em 0;
+        }
+
+        .analysis-content li {
+            margin: 0.5em 0;
+        }
+
+        .analysis-content li > p {
+            margin: 0.3em 0;
+        }
+
+        .analysis-content p {
+            margin: 1em 0;
+            line-height: 1.7;
+        }
+
+        .analysis-content code {
+            background-color: rgba(27,31,35,0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 85%;
+        }
+
+        .analysis-content pre {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow: auto;
+            line-height: 1.45;
+            margin: 1em 0;
+        }
+
+        .analysis-content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 100%;
+        }
+
+        .analysis-content blockquote {
+            margin: 1em 0;
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid #dfe2e5;
+        }
+
+        .analysis-content hr {
+            height: 0.25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: #e1e4e8;
+            border: 0;
+        }
+
+        .analysis-content table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: 100%;
+            overflow: auto;
+        }
+
+        .analysis-content table th,
+        .analysis-content table td {
+            padding: 6px 13px;
+            border: 1px solid #dfe2e5;
+        }
+
+        .analysis-content table tr {
+            background-color: #fff;
+            border-top: 1px solid #c6cbd1;
+        }
+
+        .analysis-content table tr:nth-child(2n) {
+            background-color: #f6f8fa;
+        }
+
+        .model-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        #transcript-display {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .transcript-entry {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .transcript-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin-top: 8px;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #error-message {
+            color: #dc3545;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .video-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .video-info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .video-info p {
+            margin: 5px 0;
+            color: #34495e;
+        }
+        
+        .status-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .transcript-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .transcript-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transcript-content {
+            padding: 15px;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .transcript-content.show {
+            display: block;
+        }
+        .timestamp {
+            color: #666;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .strikethrough {
+            text-decoration: line-through;
+            color: #999;
+        }
+        .correction {
+            color: #28a745;
+            margin-left: 4px;
+        }
+        .transcript-header {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .transcript-header:hover {
+            background-color: #e9ecef;
+        }
+        
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-header h1 {
+            margin: 0;
+            text-align: left;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* New styles for tab navigation */
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: none;
+            border: none;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-button:hover {
+            color: #495057;
+            background-color: #f8f9fa;
+        }
+
+        .tab-button.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            background-color: transparent;
+        }
+
+        /* Content sections */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* Reddit-specific styles */
+        .reddit-input-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #reddit-url {
+            width: 70%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .reddit-tools-section {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background-color: #fff0f0;
+            border-radius: 8px;
+        }
+
+        .reddit-tool-buttons button {
+            background-color: #ff4500;
+        }
+
+        .reddit-tool-buttons button:hover {
+            background-color: #cc3700;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-header">
+        <h1>YouTube Transcript Analyzer</h1>
+        <div class="nav-links">
+            <a href="/library">Video Library</a>
+            <a href="/reddit/library">Reddit Library</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>Content Analyzer</h1>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('youtube')">YouTube Analysis</button>
+            <button class="tab-button" onclick="switchTab('reddit')">Reddit Analysis</button>
+        </div>
+
+        <!-- YouTube Section (Existing Content) -->
+        <div id="youtube-section" class="content-section active">
+            <div class="input-section">
+                <input type="text" id="video-url" placeholder="Enter YouTube video URL">
+                <button onclick="getTranscript()">Get Transcript</button>
+                <a href="/library" class="btn btn-outline-primary ms-3">View Library</a>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Processing transcript...</p>
+            </div>
+            <div id="error-message"></div>
+
+            <div id="video-info" class="video-info">
+                <h3>Video Information</h3>
+                <p id="video-title"></p>
+                <div id="file-status" class="status-message"></div>
+            </div>
+
+            <div id="tools-section" class="tools-section" style="display: none;">
+                <h2>Analysis Tools</h2>
+                
+                <div class="model-selection">
+                    <label>
+                        <input type="radio" name="model" value="mistral" checked> Mistral (Local)
+                    </label>
+                    <label>
+                        <input type="radio" name="model" value="gpt"> GPT-4
+                    </label>
+                </div>
+                
+                <div class="tool-buttons">
+                    <button onclick="analyzeTranscript('technical_summary')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Technical Summary
+                    </button>
+                    <button onclick="analyzeTranscript('full_context')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Full Context Analysis
+                    </button>
+                    <button onclick="analyzeTranscript('code_snippets')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Extract Code & Commands
+                    </button>
+                    <button onclick="analyzeTranscript('tools_and_resources')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        List Tools & Resources
+                    </button>
+                    <button onclick="analyzeTranscript('key_workflows')">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Extract Workflows
+                    </button>
+                </div>
+            </div>
+
+            <div class="transcript-section">
+                <div class="transcript-header" onclick="toggleTranscript()">
+                    <h2>Transcript</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="transcript-display" style="display: none;"></div>
+            </div>
+
+            <div id="analysis-result" class="analysis-result">
+                <div class="model-badge"></div>
+                <div class="analysis-content"></div>
+            </div>
+        </div>
+
+        <!-- Reddit Section (New Content) -->
+        <div class="content-section" id="reddit-section">
+            <div class="reddit-input-section">
+                <input type="text" id="reddit-url" placeholder="Enter Reddit post URL" class="form-control">
+                <button onclick="fetchRedditPost()" class="btn btn-primary">Fetch Post</button>
+            </div>
+            
+            <div id="reddit-post-content" class="post-content" style="display: none;">
+                <div class="post-info">
+                    <h3 id="post-title"></h3>
+                    <p id="post-metadata"></p>
+                </div>
+                <div class="post-body"></div>
+                <div class="post-comments"></div>
+            </div>
+
+            <div class="reddit-tools-section" style="display: none;">
+                <h3>Analysis Tools</h3>
+                <div class="model-select">
+                    <label for="reddit-model">Select Model:</label>
+                    <select id="reddit-model" class="form-select">
+                        <option value="mistral">Mistral</option>
+                        <option value="gpt">GPT</option>
+                    </select>
+                </div>
+                <div class="tool-buttons">
+                    <button onclick="runRedditAnalysis('sentiment')" class="btn btn-primary">Sentiment Analysis</button>
+                    <button onclick="runRedditAnalysis('keywords')" class="btn btn-primary">Keyword Analysis</button>
+                    <button onclick="runRedditAnalysis('engagement')" class="btn btn-primary">Engagement Analysis</button>
+                    <button onclick="runRedditAnalysis('summary')" class="btn btn-primary">Summary</button>
+                    <button onclick="runRedditAnalysis('top_comments')" class="btn btn-primary">Top Comments</button>
+                    <button onclick="runRedditAnalysis('tools_workflow')" class="btn btn-primary">Tools & Workflow</button>
+                    <button onclick="runRedditAnalysis('prompting_patterns')" class="btn btn-primary">Prompting Patterns</button>
+                    <button onclick="runRedditAnalysis('code_review')" class="btn btn-primary">Code Review</button>
+                </div>
+            </div>
+
+            <div id="reddit-analysis-result" class="analysis-result">
+                <div class="analysis-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideoTitle = null;
+        
+        // Add function to update button states based on model selection
+        function updateButtonStates() {
+            const model = document.querySelector('input[name="model"]:checked').value;
+            const fullContextButton = document.querySelector('button[onclick="analyzeTranscript(\'full_context\')"]');
+            
+            if (model === 'mistral') {
+                fullContextButton.disabled = true;
+                fullContextButton.title = 'Full Context analysis is only available with GPT';
+            } else {
+                fullContextButton.disabled = false;
+                fullContextButton.title = '';
+            }
+        }
+        
+        // Add event listeners for model selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const modelInputs = document.querySelectorAll('input[name="model"]');
+            modelInputs.forEach(input => {
+                input.addEventListener('change', updateButtonStates);
+            });
+            updateButtonStates(); // Initial state
+        });
+        
+        async function getTranscript() {
+            const videoUrl = document.getElementById('video-url').value;
+            if (!videoUrl) {
+                showError('Please enter a YouTube video URL');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch('/get_transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ video_url: videoUrl })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get transcript');
+                }
+
+                // Update video info
+                displayVideoInfo(data);
+
+                // Display transcript using the new function
+                displayTranscript(data.transcript.segments);
+
+                // Show transcript and tools sections
+                document.querySelector('.transcript-section').style.display = 'block';
+                document.querySelector('.tools-section').style.display = 'block';
+                document.getElementById('transcript-display').style.display = 'block';
+                document.querySelector('.toggle-icon').textContent = '▼';
+                document.querySelector('.toggle-icon').classList.remove('collapsed');
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function analyzeTranscript(analysisType) {
+            const button = event.currentTarget;
+            const allButtons = document.querySelectorAll('.tool-buttons button');
+            
+            const videoTitle = document.querySelector('.video-info h2').textContent;
+            if (!videoTitle) {
+                showError('Please get a transcript first');
+                return;
+            }
+            
+            // Disable all buttons and show loading state on clicked button
+            allButtons.forEach(btn => btn.disabled = true);
+            button.classList.add('loading');
+            
+            const model = document.querySelector('input[name="model"]:checked').value;
+            
+            try {
+                const response = await fetch('/analyze_transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_title: videoTitle,
+                        analysis_type: analysisType,
+                        model: model
+                    })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayAnalysisResult(data.analysis, model);
+                showStatus(`Analysis completed successfully`, 'success');
+            } catch (error) {
+                showError('Error during analysis: ' + error.message);
+            } finally {
+                // Re-enable all buttons and remove loading state
+                allButtons.forEach(btn => btn.disabled = false);
+                button.classList.remove('loading');
+            }
+        }
+        
+        function showError(message) {
+            showStatus(message, 'error');
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('file-status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loading');
+            if (show) {
+                loadingDiv.style.display = 'block';
+            } else {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+        }
+
+        function toggleTranscript() {
+            const display = document.getElementById('transcript-display');
+            const icon = document.querySelector('.toggle-icon');
+            
+            if (display.style.display === 'none') {
+                display.style.display = 'block';
+                icon.classList.remove('collapsed');
+                icon.textContent = '▼';
+            } else {
+                display.style.display = 'none';
+                icon.classList.add('collapsed');
+                icon.textContent = '▶';
+            }
+        }
+
+        function displayAnalysisResult(result, model) {
+            const analysisResult = document.getElementById('analysis-result');
+            const modelBadge = model === 'mistral' ? 'Mistral (Local)' : 'GPT-4';
+            
+            // Format the text for proper markdown rendering
+            let formattedText = result
+                // Replace ### with proper markdown headers
+                .replace(/###\s+/g, '### ')
+                // Replace ## with proper markdown headers
+                .replace(/##\s+/g, '## ')
+                // Replace # with proper markdown headers
+                .replace(/#\s+/g, '# ')
+                // Add proper spacing for bullet points
+                .replace(/- /g, '\n- ')
+                // Format code blocks
+                .replace(/```([^`]+)```/g, '\n```$1```\n')
+                // Add proper spacing for numbered lists
+                .replace(/(\d+\.) /g, '\n$1 ')
+                // Add proper spacing around sections
+                .replace(/(\n[#]+[^\n]+)/g, '\n\n$1\n');
+
+            // Configure marked options for better rendering
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                headerIds: true
+            });
+            
+            // Convert the markdown to HTML
+            const htmlContent = marked.parse(formattedText);
+            
+            analysisResult.innerHTML = `
+                <div class="model-badge">${modelBadge}</div>
+                <div class="analysis-content">${htmlContent}</div>
+            `;
+            
+            analysisResult.style.display = 'block';
+            
+            // Add syntax highlighting for code blocks
+            document.querySelectorAll('pre code').forEach((block) => {
+                block.style.backgroundColor = '#f8f9fa';
+                block.style.padding = '1em';
+                block.style.borderRadius = '4px';
+                block.style.display = 'block';
+                block.style.overflow = 'auto';
+            });
+        }
+
+        function displayVideoInfo(data) {
+            const videoInfoDiv = document.getElementById('video-info');
+            videoInfoDiv.innerHTML = `
+                <h2>${data.title}</h2>
+                <div class="video-metadata">
+                    <img src="${data.metadata.thumbnail_url}" alt="${data.title}" class="video-thumbnail">
+                    <div class="metadata-text">
+                        <p><strong>Channel:</strong> <a href="${data.metadata.channel_url}" target="_blank">${data.metadata.channel_name}</a></p>
+                        <p><strong>Published:</strong> ${data.metadata.publish_date}</p>
+                        <p><strong>Views:</strong> ${data.metadata.view_count}</p>
+                    </div>
+                </div>
+                <div class="video-description">
+                    <p>${data.metadata.description}</p>
+                </div>
+            `;
+        }
+
+        function displayTranscript(segments) {
+            const transcriptDisplay = document.getElementById('transcript-display');
+            transcriptDisplay.innerHTML = '';
+            
+            segments.forEach(segment => {
+                const entry = document.createElement('div');
+                entry.className = 'transcript-entry';
+                entry.innerHTML = `
+                    <span class="timestamp">${segment.timestamp}</span>
+                    <div class="transcript-text">${segment.text}</div>
+                `;
+                transcriptDisplay.appendChild(entry);
+            });
+        }
+
+        // New JavaScript for Reddit functionality
+        function switchTab(tab) {
+            // Update button states
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Hide all content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected content section
+            document.getElementById(`${tab}-section`).classList.add('active');
+        }
+
+        async function fetchRedditPost() {
+            const urlInput = document.getElementById('reddit-url');
+            const postContent = document.getElementById('reddit-post-content');
+            const toolsSection = document.querySelector('.reddit-tools-section');
+            const errorMessage = document.getElementById('error-message');
+            
+            try {
+                // Show loading state
+                urlInput.disabled = true;
+                errorMessage.style.display = 'none';
+                
+                const response = await fetch('/reddit/fetch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        post_url: urlInput.value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Display post content
+                    document.getElementById('post-title').textContent = data.title;
+                    document.getElementById('post-metadata').textContent = 
+                        `Posted by u/${data.author} in r/${data.subreddit} • ${new Date(data.created_utc * 1000).toLocaleString()}`;
+                    document.querySelector('.post-body').innerHTML = marked.parse(data.selftext);
+                    
+                    // Show post content and analysis tools
+                    postContent.style.display = 'block';
+                    toolsSection.style.display = 'block';
+                } else {
+                    errorMessage.textContent = data.error || 'Failed to fetch Reddit post';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred while fetching the post';
+                errorMessage.style.display = 'block';
+            } finally {
+                urlInput.disabled = false;
+            }
+        }
+
+        async function runRedditAnalysis(analysisType) {
+            const urlInput = document.getElementById('reddit-url');
+            const model = document.getElementById('reddit-model').value;
+            const analysisResult = document.getElementById('reddit-analysis-result');
+            const analysisContent = analysisResult.querySelector('.analysis-content');
+            const button = event.target;
+            const postTitle = document.getElementById('post-title').textContent;
+            
+            try {
+                // Show loading state
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing...';
+                
+                // Only fetch if post hasn't been loaded yet
+                let postData;
+                if (!postTitle) {
+                    const fetchResponse = await fetch('/reddit/fetch', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            post_url: urlInput.value
+                        })
+                    });
+                    
+                    postData = await fetchResponse.json();
+                    
+                    if (!fetchResponse.ok) {
+                        throw new Error(postData.error || 'Failed to fetch post');
+                    }
+                    
+                    // Display post content since this is first fetch
+                    document.getElementById('post-title').textContent = postData.title;
+                    document.getElementById('post-metadata').textContent = 
+                        `Posted by u/${postData.author} in r/${postData.subreddit} • ${new Date(postData.created_utc * 1000).toLocaleString()}`;
+                    document.querySelector('.post-body').innerHTML = marked.parse(postData.selftext);
+                    
+                    // Show post content and analysis tools
+                    document.getElementById('reddit-post-content').style.display = 'block';
+                    document.querySelector('.reddit-tools-section').style.display = 'block';
+                }
+                
+                // Then analyze the post
+                const analysisResponse = await fetch('/analyze_reddit_post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        post_url: urlInput.value,  // Send URL instead of post_id
+                        analysis_type: analysisType,
+                        model: model
+                    })
+                });
+                
+                const analysisData = await analysisResponse.json();
+                
+                if (analysisResponse.ok) {
+                    // Display analysis result with markdown formatting
+                    analysisContent.innerHTML = marked.parse(analysisData.analysis);
+                    analysisResult.style.display = 'block';
+                    
+                    // Redirect to the post page to see all analyses
+                    window.location.href = `/reddit/post/${postData.post_id}`;
+                } else {
+                    throw new Error(analysisData.error || 'Analysis failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                analysisContent.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                analysisResult.style.display = 'block';
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                button.textContent = analysisType;
+            }
+        }
+    </script>
+</body>
+</html> 
