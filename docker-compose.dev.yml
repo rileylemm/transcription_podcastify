@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: docker/youtube_transcripts/Dockerfile
+    ports:
+      - "5004:5004"
+    volumes:
+      # Application code for development
+      - ./youtube_transcripts:/app
+      # Shared data directory for both services
+      - ./shared/data/chroma:/app/data/chroma
+      - ./shared/data/cache:/app/data/cache
+      - ./shared/data/transcripts:/app/data/transcripts
+      - ./shared/data/analysis:/app/data/analysis
+      # Model cache persistence
+      - ./shared/data/model_cache:/root/.cache/huggingface
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      # Add your API keys and other environment variables here
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      # ChromaDB settings
+      - CHROMA_DATA_DIR=/app/data/chroma
+      # Cache settings
+      - CACHE_DIR=/app/data/cache
+    env_file:
+      - .env
+    extra_hosts:
+      # This allows the container to access host machine services
+      - "host.docker.internal:host-gateway"
+
+# Define named volumes for persistent data
+volumes:
+  chroma_data:
+    name: transcript_podcastify_chroma_data
+  cache_data:
+    name: transcript_podcastify_cache_data
+  transcript_data:
+    name: transcript_podcastify_transcript_data
+  analysis_data:
+    name: transcript_podcastify_analysis_data

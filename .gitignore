@@ -72,4 +72,17 @@ Thumbs.db
 
 # Supervisor files
 *.pid
-service/supervisord.pid 
+service/supervisord.pid
+
+# Shared data directory contents
+shared/data/*
+!shared/data/.gitkeep
+!shared/data/*/
+shared/data/chroma/*
+!shared/data/chroma/.gitkeep
+shared/data/cache/*
+!shared/data/cache/.gitkeep
+shared/data/transcripts/*
+!shared/data/transcripts/.gitkeep
+shared/data/analysis/*
+!shared/data/analysis/.gitkeep 
