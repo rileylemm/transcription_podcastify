@@ -9,7 +9,7 @@ services:
       - "5004:5004"
     volumes:
       # Application code for development
-      - ./youtube_transcripts:/app
+      - ./transcription:/app
       # Shared data directory for both services
       - ./shared/data/chroma:/app/data/chroma
       - ./shared/data/cache:/app/data/cache
