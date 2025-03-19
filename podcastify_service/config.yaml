@@ -1,0 +1,23 @@
+text_to_speech:
+  default_tts_model: "openai"  # Options: openai, elevenlabs, edge, gemini
+  openai:
+    default_voices:
+      speaker1: "alloy"
+      speaker2: "echo"
+  edge:
+    default_voices:
+      speaker1: "en-US-JennyNeural"
+      speaker2: "en-US-GuyNeural"
+
+conversation:
+  default_style: ["engaging", "informative"]
+  default_roles:
+    person1: "main summarizer"
+    person2: "questioner"
+  dialogue_structure: ["Introduction", "Content", "Conclusion"]
+  creativity_level: 0.7
+  word_count: 2000
+
+output_directories:
+  audio: "/app/output"
+  transcripts: "/app/data/transcripts" 

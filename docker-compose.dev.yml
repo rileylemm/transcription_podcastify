@@ -47,6 +47,29 @@ services:
     networks:
       - app_network
 
+  podcastify:
+    build:
+      context: ./podcastify_service
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5000"
+    volumes:
+      - ./podcastify_service:/app
+      - ./shared/data/podcasts:/app/output
+      - ./shared/data/transcripts:/app/data/transcripts
+      - ./shared/data/analysis:/app/data/analysis
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - TTS_MODEL=openai # Options: openai, elevenlabs, edge, gemini
+    env_file:
+      - .env
+    networks:
+      - app_network
+
 # Define networks
 networks:
   app_network:
