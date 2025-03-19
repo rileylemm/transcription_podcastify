@@ -15,6 +15,7 @@ services:
       - ./shared/data/cache:/app/data/cache
       - ./shared/data/transcripts:/app/data/transcripts
       - ./shared/data/analysis:/app/data/analysis
+      - ./shared/data/reddit:/app/data/reddit
       # Model cache persistence
       - ./shared/data/model_cache:/root/.cache/huggingface
     environment:
