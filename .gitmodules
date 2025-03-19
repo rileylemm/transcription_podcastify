@@ -1,0 +1,3 @@
+[submodule "youtube_transcripts"]
+	path = youtube_transcripts
+	url = https://github.com/rileylemm/youtube_transcript_analyzer.git
