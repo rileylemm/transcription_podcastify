@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  youtube_transcripts:
+    build:
+      context: ./youtube_transcripts
+      dockerfile: Dockerfile
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://user:pass@db:5432/dbname
+    ports:
+      - "5004:5004"
+    volumes:
+      - ./youtube_transcripts:/app
+    depends_on:
+      - db
+      - redis
+      - vector_store
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=dbname
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+
+  vector_store:
+    image: qdrant/qdrant
+    volumes:
+      - vector_store_data:/qdrant/storage
+    ports:
+      - "6334:6333"
+
+volumes:
+  postgres_data:
+  redis_data:
+  vector_store_data: 

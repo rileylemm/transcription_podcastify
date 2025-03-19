@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+.python-version
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+*.log
+logs/
+tmp/
+temp/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+data/
+chroma_db/
+*.sqlite3
+checkpoints/
+cache/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.pyc
+
+# OS
+Thumbs.db
+
+# Supervisor files
+*.pid
+service/supervisord.pid 
