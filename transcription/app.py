@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file, url_for
 from scripts.youtube_transcript import (
     get_transcript, get_video_title, save_video_metadata
 )
@@ -640,9 +640,16 @@ async def analyze_transcript():
                     'text': result,
                     'type': f'analysis_{analysis_type}',
                     'model': model,
-                    'post_id': post_id
                 }
-                vector_store.add_reddit_analysis(post_id, analysis_type, model, {'text': result, 'metadata': analysis_doc})
+                
+                # Only add post_id if it's a Reddit post analysis
+                if 'post_id' in request.json:
+                    post_id = request.json['post_id']
+                    analysis_doc['post_id'] = post_id
+                    vector_store.add_reddit_analysis(post_id, analysis_type, model, {'text': result, 'metadata': analysis_doc})
+                else:
+                    # For YouTube video analysis, use video title as identifier
+                    vector_store.add_video_analysis(video_title, analysis_type, model, {'text': result, 'metadata': analysis_doc})
                 logger.info("Added analysis to vector store")
             except Exception as e:
                 logger.error(f"Error adding analysis to vector store: {str(e)}", exc_info=True)
@@ -1360,9 +1367,16 @@ async def analyze_reddit_post():
                     'text': result,
                     'type': f'analysis_{analysis_type}',
                     'model': model,
-                    'post_id': post_id
                 }
-                vector_store.add_reddit_analysis(post_id, analysis_type, model, {'text': result, 'metadata': analysis_doc})
+                
+                # Only add post_id if it's a Reddit post analysis
+                if 'post_id' in request.json:
+                    post_id = request.json['post_id']
+                    analysis_doc['post_id'] = post_id
+                    vector_store.add_reddit_analysis(post_id, analysis_type, model, {'text': result, 'metadata': analysis_doc})
+                else:
+                    # For YouTube video analysis, use video title as identifier
+                    vector_store.add_video_analysis(video_title, analysis_type, model, {'text': result, 'metadata': analysis_doc})
                 logger.info("Added analysis to vector store")
             except Exception as e:
                 logger.error(f"Error adding analysis to vector store: {str(e)}", exc_info=True)

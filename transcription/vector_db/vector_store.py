@@ -559,31 +559,39 @@ class VectorStore:
             raise
 
     def add_reddit_analysis(self, post_id: str, analysis_type: str, model: str, content: Dict[str, Any]) -> None:
-        """Add a Reddit post analysis to the vector store."""
+        """Add an analysis for a Reddit post to the vector store."""
         try:
-            # Prepare metadata
-            metadata = content.get('metadata', {})
-            metadata.update({
-                'post_id': post_id,
-                'analysis_type': analysis_type,
-                'model': model,
-                'content_type': 'reddit_analysis'
-            })
+            # Create a unique ID for this analysis
+            analysis_id = f"{post_id}_{analysis_type}_{model}"
             
-            # Generate unique ID for the analysis
-            analysis_id = f"reddit_{post_id}_{analysis_type}_{model}"
-            
-            # Add to collection
+            # Add the analysis to the collection
             self.reddit_collection.add(
                 documents=[content['text']],
-                metadatas=[metadata],
+                metadatas=[content['metadata']],
                 ids=[analysis_id]
             )
-            
-            logger.info(f"Added {analysis_type} analysis for Reddit post {post_id}")
+            logger.info(f"Added analysis {analysis_id} to vector store")
             
         except Exception as e:
-            logger.error(f"Error adding Reddit analysis: {str(e)}")
+            logger.error(f"Error adding analysis to vector store: {str(e)}")
+            raise
+
+    def add_video_analysis(self, video_title: str, analysis_type: str, model: str, content: Dict[str, Any]) -> None:
+        """Add an analysis for a video to the vector store."""
+        try:
+            # Create a unique ID for this analysis
+            analysis_id = f"{video_title}_{analysis_type}_{model}"
+            
+            # Add the analysis to the collection
+            self.transcript_collection.add(
+                documents=[content['text']],
+                metadatas=[content['metadata']],
+                ids=[analysis_id]
+            )
+            logger.info(f"Added analysis {analysis_id} to vector store")
+            
+        except Exception as e:
+            logger.error(f"Error adding video analysis to vector store: {str(e)}")
             raise
 
     def get_reddit_post_analyses(self, post_id: str) -> List[Dict[str, Any]]:
