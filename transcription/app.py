@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, 
+           template_folder='templates',  # Relative to the app.py location
+           static_folder='static')       # In case we have static files
 app.config['UPLOAD_FOLDER'] = '/app/data'
 app.config['CHROMA_DATA_DIR'] = '/app/data/chroma'
 app.config['CACHE_DIR'] = '/app/data/cache'
