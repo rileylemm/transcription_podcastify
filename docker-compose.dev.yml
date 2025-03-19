@@ -27,11 +27,29 @@ services:
       - CHROMA_DATA_DIR=/app/data/chroma
       # Cache settings
       - CACHE_DIR=/app/data/cache
+      # Mistral settings
+      - MISTRAL_API_URL=http://mistral:11434
     env_file:
       - .env
-    extra_hosts:
-      # This allows the container to access host machine services
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mistral
+    networks:
+      - app_network
+
+  mistral:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./shared/data/mistral:/root/.cache/ollama
+    command: ["serve"]
+    networks:
+      - app_network
+
+# Define networks
+networks:
+  app_network:
+    driver: bridge
 
 # Define named volumes for persistent data
 volumes:
@@ -43,3 +61,5 @@ volumes:
     name: transcript_podcastify_transcript_data
   analysis_data:
     name: transcript_podcastify_analysis_data
+  mistral_data:
+    name: transcript_podcastify_mistral_data

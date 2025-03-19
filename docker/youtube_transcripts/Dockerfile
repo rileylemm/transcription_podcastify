@@ -16,7 +16,7 @@ COPY youtube_transcripts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download NLTK data
-RUN python -m nltk.downloader punkt averaged_perceptron_tagger
+RUN python -c "import nltk; nltk.download(['punkt', 'punkt_tab', 'averaged_perceptron_tagger', 'stopwords'])"
 
 # Copy the application code
 COPY youtube_transcripts/ .
