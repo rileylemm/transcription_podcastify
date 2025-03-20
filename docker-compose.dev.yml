@@ -42,8 +42,9 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ./shared/data/mistral:/root/.cache/ollama
-    command: ["serve"]
+      - ./shared/data/mistral:/root/.ollama
+      - ./docker/mistral/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
     networks:
       - app_network
 

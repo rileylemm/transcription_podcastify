@@ -224,13 +224,24 @@ class RedditAnalyzer:
                 full_text += f"\n---\n{comment['body']}\n"
 
         system_messages = {
-            "sentiment": """Analyze the sentiment of this Reddit post and its comments. Consider:
-1. Overall tone of the post
-2. Emotional content
-3. User reactions and engagement
-4. Comment sentiment patterns
+            "sentiment": """Analyze the sentiment of this Reddit post and its comments. Format your response in markdown with the following sections:
 
-Provide a detailed sentiment analysis with specific examples.""",
+# Overall Sentiment
+- Overall tone and mood of the post
+- Key emotional indicators
+- Writing style and presentation
+
+# User Engagement
+- Comment patterns and themes
+- Interaction quality
+- Community response
+
+# Key Observations
+- Notable sentiment shifts
+- Standout comments or reactions
+- Contextual factors
+
+Ensure each section uses proper markdown formatting with headers (#) and bullet points (-).""",
             
             "keywords": """Extract and analyze key topics and themes from this Reddit post. Include:
 1. Main keywords and their frequency
