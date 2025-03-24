@@ -199,4 +199,69 @@ Feel free to open issues or submit pull requests for improvements.
 
 ## License
 
-MIT License 
+MIT License
+
+## Docker Setup
+
+The application can be run using Docker Compose, which sets up three services:
+- Flask service (YouTube Transcripts) on port 5004
+- Mistral service (Local LLM) on port 11434
+- Podcastify service on port 5005
+
+### Prerequisites
+
+1. Install Docker and Docker Compose
+2. Copy `.env.example` to `.env` and fill in your API keys:
+   ```bash
+   cp .env.example .env
+   ```
+3. Ensure the following directories exist (they will be created automatically if missing):
+   ```
+   shared/
+   ├── data/
+       ├── chroma/
+       ├── cache/
+       ├── transcripts/
+       ├── analysis/
+       ├── reddit/
+       ├── podcasts/
+       ├── mistral/
+       └── model_cache/
+   ```
+
+### Running with Docker
+
+1. Start all services:
+   ```bash
+   docker-compose -f docker-compose.dev.yml up --build
+   ```
+
+2. Access the services:
+   - YouTube Transcripts UI: http://localhost:5004
+   - Podcastify UI: http://localhost:5005
+   - Mistral API: http://localhost:11434
+
+3. Stop the services:
+   ```bash
+   docker-compose -f docker-compose.dev.yml down
+   ```
+
+4. View logs:
+   ```bash
+   # All services
+   docker-compose -f docker-compose.dev.yml logs -f
+
+   # Specific service
+   docker-compose -f docker-compose.dev.yml logs -f flask
+   docker-compose -f docker-compose.dev.yml logs -f mistral
+   docker-compose -f docker-compose.dev.yml logs -f podcastify
+   ```
+
+### Data Persistence
+
+All data is persisted in the `shared/data` directory:
+- Transcripts and analysis results
+- ChromaDB vector database
+- Model caches
+- Generated podcasts
+- Reddit data 
