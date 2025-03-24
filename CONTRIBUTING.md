@@ -2,17 +2,6 @@
 
 Thank you for your interest in contributing to Transcript Podcastify! This document provides guidelines and steps for contributing to the project.
 
-## Table of Contents
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Pull Request Process](#pull-request-process)
-- [Commit Message Guidelines](#commit-message-guidelines)
-- [Branch Naming Convention](#branch-naming-convention)
-- [Development Environment](#development-environment)
-- [Testing Guidelines](#testing-guidelines)
-- [Documentation](#documentation)
-
 ## Code of Conduct
 
 By participating in this project, you agree to maintain a respectful and inclusive environment. We expect all contributors to:
